@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Template
 metadata:
@@ -161,7 +162,7 @@ objects:
             name: sentry-github-oauth
           - secretRef:
             name: sentry-general
-          image: quay.io/app-sre/sentry:9.1.2
+          image: ${IMAGE}:${IMAGE_TAG}
           imagePullPolicy: Always
           name: sentry-cron
           resources: {}
@@ -280,7 +281,7 @@ objects:
             name: sentry-github-oauth
           - secretRef:
             name: sentry-general
-          image: quay.io/app-sre/sentry:9.1.2
+          image: ${IMAGE}:${IMAGE_TAG}
           imagePullPolicy: Always
           name: sentry-web
           ports:
@@ -399,7 +400,7 @@ objects:
             name: sentry-github-oauth
           - secretRef:
             name: sentry-general
-          image: quay.io/app-sre/sentry:9.1.2
+          image: ${IMAGE}:${IMAGE_TAG}
           imagePullPolicy: Always
           name: sentry-worker
           resources: {}
@@ -466,7 +467,12 @@ objects:
   status:
     loadBalancer: {}
 parameters:
-- description: Image tag
-  displayName: Image tag
-  name: IMAGE_TAG
+parameters:
+- name: IMAGE
+  value: quay.io/app-sre/sentry
+  displayName: sentry image
+  description: sentry docker image. Defaults to quay.io/app-sre/sentry
+- name: IMAGE_TAG
   value: "latest"
+  displayName: sentry version
+  description: sentry version which defaults to latest
