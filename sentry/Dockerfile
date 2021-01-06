@@ -60,7 +60,6 @@ RUN set -x \
     && yum remove -y wget && yum clean all
 
 ENV SENTRY_VERSION 20.11.1
-
 RUN set -x \
     && yum install -y wget gcc-c++ \
     && mkdir -p /usr/src/sentry \

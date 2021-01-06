@@ -217,7 +217,6 @@ SENTRY_WEB_OPTIONS = {
 # Mail Server #
 ###############
 
-
 email = env("SENTRY_EMAIL_HOST") or (env("SMTP_PORT_25_TCP_ADDR") and "smtp")
 if email:
     SENTRY_OPTIONS["mail.backend"] = "smtp"
@@ -244,6 +243,13 @@ else:
 
 if SENTRY_OPTIONS["mail.enable-replies"]:
     SENTRY_OPTIONS["mail.reply-hostname"] = env("SENTRY_SMTP_HOSTNAME") or ""
+
+#########################
+# Symbolicator Settings #
+#########################
+
+# Allow Symbolicator's request IP to fetch debug files from Sentry.
+INTERNAL_SYSTEM_IPS = ["127.0.0.1"]
 
 # If this value ever becomes compromised, it's important to regenerate your
 # SENTRY_SECRET_KEY. Changing this value will result in all current sessions
