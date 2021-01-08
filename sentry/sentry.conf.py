@@ -124,16 +124,16 @@ if memcached:
 # A primary cache is required for things such as processing events
 SENTRY_CACHE = "sentry.cache.redis.RedisCache"
 
-#DEFAULT_KAFKA_OPTIONS = {
-#    "bootstrap.servers": "kafka:9092",
-#    "message.max.bytes": 50000000,
-#    "socket.timeout.ms": 1000,
-#}
+DEFAULT_KAFKA_OPTIONS = {
+    "bootstrap.servers": "kafka:9092",
+    "message.max.bytes": 50000000,
+    "socket.timeout.ms": 1000,
+}
 
-#SENTRY_EVENTSTREAM = "sentry.eventstream.kafka.KafkaEventStream"
-#SENTRY_EVENTSTREAM_OPTIONS = {"producer_configuration": DEFAULT_KAFKA_OPTIONS}
+SENTRY_EVENTSTREAM = "sentry.eventstream.kafka.KafkaEventStream"
+SENTRY_EVENTSTREAM_OPTIONS = {"producer_configuration": DEFAULT_KAFKA_OPTIONS}
 
-#KAFKA_CLUSTERS["default"] = DEFAULT_KAFKA_OPTIONS
+KAFKA_CLUSTERS["default"] = DEFAULT_KAFKA_OPTIONS
 
 #########
 # Queue #
@@ -196,7 +196,6 @@ SENTRY_QUOTAS = "sentry.quotas.redis.RedisQuota"
 # The TSDB is used for building charts as well as making things like per-rate
 # alerts possible.
 
-#SENTRY_TSDB = "sentry.tsdb.redis.RedisTSDB"
 SENTRY_TSDB = "sentry.tsdb.redissnuba.RedisSnubaTSDB"
 
 #########
@@ -206,7 +205,6 @@ SENTRY_TSDB = "sentry.tsdb.redissnuba.RedisSnubaTSDB"
 SENTRY_SEARCH = "sentry.search.snuba.EventsDatasetSnubaSearchBackend"
 SENTRY_SEARCH_OPTIONS = {}
 SENTRY_TAGSTORE_OPTIONS = {}
-SENTRY_EVENTSTREAM = 'sentry.eventstream.snuba.SnubaEventStream'
 
 ###########
 # Digests #
