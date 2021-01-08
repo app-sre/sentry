@@ -1,6 +1,5 @@
 SHELL:=/bin/bash
 IMAGE_PREFIX := quay.io/app-sre
-IMAGE_NAME := quay.io/app-sre/sentry
 IMAGE_TAG := $(shell git rev-parse --short=7 HEAD)
 
 SENTRY_INITIAL_EMAIL ?= tester@fake.com
@@ -27,21 +26,21 @@ SENTRY_OPTS = --link sentry-redis:redis --link sentry-symbolicator:symbolicator 
 build: sentryimage symbolicatorimage snubaimage
 
 sentryimage:
-	@docker build --pull -t $(IMAGE_NAME):latest sentry
-	@docker tag $(IMAGE_NAME):latest $(IMAGE_NAME):$(IMAGE_TAG)
+	@docker build --pull -t $(IMAGE_PREFIX)/sentry:latest sentry
+	@docker tag $(IMAGE_PREFIX)/sentry:latest $(IMAGE_PREFIX)/sentry:$(IMAGE_TAG)
 
 symbolicatorimage:
 	@docker build --pull -t $(IMAGE_PREFIX)/symbolicator:latest symbolicator
 	@docker tag $(IMAGE_PREFIX)/symbolicator:latest $(IMAGE_PREFIX)/symbolicator:$(IMAGE_TAG)
 
 snubaimage:
-	@docker build --pull -t $(IMAGE_PREFIX)/snuba:latest symbolicator
+	@docker build --pull -t $(IMAGE_PREFIX)/snuba:latest snuba
 	@docker tag $(IMAGE_PREFIX)/snuba:latest $(IMAGE_PREFIX)/snuba:$(IMAGE_TAG)
 
 .PHONY: push
 push:
-	@docker --config=$(DOCKER_CONF) push $(IMAGE_NAME):latest
-	@docker --config=$(DOCKER_CONF) push $(IMAGE_NAME):$(IMAGE_TAG)
+	@docker --config=$(DOCKER_CONF) push $(IMAGE_PREFIX)/sentry:latest
+	@docker --config=$(DOCKER_CONF) push $(IMAGE_PREFIX)/sentry:$(IMAGE_TAG)
 
 .PHONY: prerequp
 prerequp:
@@ -51,20 +50,20 @@ prerequp:
 
 .PHONY: localup
 localup: prerequp snubaup
-	@$(eval key := $(shell docker run --rm -it $(IMAGE_NAME):latest sentry config generate-secret-key))
+	@$(eval key := $(shell docker run --rm -it $(IMAGE_PREFIX)/sentry:latest sentry config generate-secret-key))
 	# Sentry
 	docker run --link sentry-redis:redis --link sentry-postgres:postgres --link sentry-kafka:kafka -e "SNUBA=http://snuba-api:1218" -e "SENTRY_SECRET_KEY='$(key)'" -d --name sentry-symbolicator ${IMAGE_PREFIX}/symbolicator:latest run -c /etc/symbolicator/config.yml
-	docker run --rm -it $(SENTRY_OPTS) $(IMAGE_NAME):latest upgrade --noinput
-	docker run --rm -it $(SENTRY_OPTS) $(IMAGE_NAME):latest sentry createuser --email ${SENTRY_INITIAL_EMAIL} --password ${SENTRY_INITIAL_PASSWORD} --superuser --no-input
+	docker run --rm -it $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest upgrade --noinput
+	docker run --rm -it $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest sentry createuser --email ${SENTRY_INITIAL_EMAIL} --password ${SENTRY_INITIAL_PASSWORD} --superuser --no-input
 
-	docker run -d --name sentry-cron $(SENTRY_OPTS) $(IMAGE_NAME):latest run cron
-	docker run -d --name sentry-web-01 $(SENTRY_OPTS) --publish 9000:9000 $(IMAGE_NAME):latest run web
-	docker run -d --name sentry-worker-01 $(SENTRY_OPTS) $(IMAGE_NAME):latest run worker
+	docker run -d --name sentry-cron $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run cron
+	docker run -d --name sentry-web-01 $(SENTRY_OPTS) --publish 9000:9000 $(IMAGE_PREFIX)/sentry:latest run web
+	docker run -d --name sentry-worker-01 $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run worker
 
-#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-ingest-consumer $(IMAGE_NAME):latest run ingest-consumer --all-consumer-types
-#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-post-process-forwarder $(IMAGE_NAME):latest run post-process-forwarder --commit-batch-size 1
-#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-subscription-consumer-events $(IMAGE_NAME):latest run query-subscription-consumer --commit-batch-size 1 --topic events-subscription-results
-#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-subscription-consumer-transactions $(IMAGE_NAME):latest run query-subscription-consumer --commit-batch-size 1 --topic transactions-subscription-results
+#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-ingest-consumer $(IMAGE_PREFIX)/sentry:latest run ingest-consumer --all-consumer-types
+#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-post-process-forwarder $(IMAGE_PREFIX)/sentry:latest run post-process-forwarder --commit-batch-size 1
+#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-subscription-consumer-events $(IMAGE_PREFIX)/sentry:latest run query-subscription-consumer --commit-batch-size 1 --topic events-subscription-results
+#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-subscription-consumer-transactions $(IMAGE_PREFIX)/sentry:latest run query-subscription-consumer --commit-batch-size 1 --topic transactions-subscription-results
 	@echo "You can now access sentry on http://localhost:9000 with user $(SENTRY_INITIAL_EMAIL) and password $(SENTRY_INITIAL_PASSWORD)"
 
 .PHONY: kafkaup
