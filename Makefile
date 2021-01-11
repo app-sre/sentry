@@ -49,21 +49,27 @@ prerequp:
 	docker run -d --name sentry-clickhouse --mount type=bind,source=$(PWD)/test/config/clickhouse.xml,target=/etc/clickhouse-server/config.d/sentry.xml yandex/clickhouse-server:20.3.9.70
 
 .PHONY: localup
-localup: prerequp snubaup
+localup: prerequp snubaup sentryup
+
+.PHONY: sentryup
+sentryup:
 	@$(eval key := $(shell docker run --rm -it $(IMAGE_PREFIX)/sentry:latest sentry config generate-secret-key))
-	# Sentry
+
+	# Symbolicator
 	docker run --link sentry-redis:redis --link sentry-postgres:postgres --link sentry-kafka:kafka -e "SNUBA=http://snuba-api:1218" -e "SENTRY_SECRET_KEY='$(key)'" -d --name sentry-symbolicator ${IMAGE_PREFIX}/symbolicator:latest run -c /etc/symbolicator/config.yml
+
+	# DB init
 	docker run --rm -it $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest upgrade --noinput
 	docker run --rm -it $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest sentry createuser --email ${SENTRY_INITIAL_EMAIL} --password ${SENTRY_INITIAL_PASSWORD} --superuser --no-input
 
+	# Sentry
 	docker run -d --name sentry-cron $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run cron
 	docker run -d --name sentry-web-01 $(SENTRY_OPTS) --publish 9000:9000 $(IMAGE_PREFIX)/sentry:latest run web
 	docker run -d --name sentry-worker-01 $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run worker
-
-#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-ingest-consumer $(IMAGE_PREFIX)/sentry:latest run ingest-consumer --all-consumer-types
-#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-post-process-forwarder $(IMAGE_PREFIX)/sentry:latest run post-process-forwarder --commit-batch-size 1
-#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-subscription-consumer-events $(IMAGE_PREFIX)/sentry:latest run query-subscription-consumer --commit-batch-size 1 --topic events-subscription-results
-#	docker run --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -d --name sentry-subscription-consumer-transactions $(IMAGE_PREFIX)/sentry:latest run query-subscription-consumer --commit-batch-size 1 --topic transactions-subscription-results
+	docker run -d --name sentry-ingest-consumer $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run ingest-consumer --all-consumer-types
+	docker run -d --name sentry-post-process-forwarder $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run post-process-forwarder --commit-batch-size 1
+	docker run -d --name sentry-subscription-consumer-events $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run query-subscription-consumer --commit-batch-size 1 --topic events-subscription-results
+	docker run -d --name sentry-subscription-consumer-transactions $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run query-subscription-consumer --commit-batch-size 1 --topic transactions-subscription-results
 	@echo "You can now access sentry on http://localhost:9000 with user $(SENTRY_INITIAL_EMAIL) and password $(SENTRY_INITIAL_PASSWORD)"
 
 .PHONY: kafkaup
@@ -81,9 +87,12 @@ prereqdown:
 	docker rm sentry-redis sentry-postgres sentry-clickhouse
 
 .PHONY: localdown
-localdown: snubadown
-	docker stop sentry-cron sentry-web-01 sentry-worker-01 sentry-symbolicator
-	docker rm sentry-cron sentry-web-01 sentry-worker-01 sentry-symbolicator
+localdown: snubadown sentrydown
+
+.PHONY: sentrydown
+sentrydown:
+	docker stop sentry-cron sentry-web-01 sentry-worker-01 sentry-symbolicator sentry-ingest-consumer sentry-post-process-forwarder sentry-subscription-consumer-events sentry-subscription-consumer-transactions
+	docker rm sentry-cron sentry-web-01 sentry-worker-01 sentry-symbolicator sentry-ingest-consumer sentry-post-process-forwarder sentry-subscription-consumer-events sentry-subscription-consumer-transactions
 
 .PHONY: kafkadown
 kafkadown:
