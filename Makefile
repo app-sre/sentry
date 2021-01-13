@@ -95,6 +95,7 @@ kafkaup:
 prereqdown:
 	docker stop sentry-redis sentry-postgres sentry-clickhouse
 	docker rm sentry-redis sentry-postgres sentry-clickhouse
+	@rm -rf test/config/relay
 
 .PHONY: localdown
 localdown: snubadown sentrydown
