@@ -20,10 +20,10 @@ else
 endif
 
 SNUBA_OPTS = --link sentry-kafka:kafka --link sentry-redis:redis --link sentry-clickhouse:clickhouse -e "SNUBA_SETTINGS=docker" -e "CLICKHOUSE_HOST=clickhouse" -e "CLICKHOUSE_PORT=9000" -e "DEFAULT_BROKERS=kafka:9092" -e "REDIS_HOST=redis" -e "REDIS_PORT=6379"
-SENTRY_OPTS = --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link sentry-snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SNUBA=http://snuba-api:1218" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True"
+SENTRY_OPTS = --link sentry-redis:redis --link sentry-symbolicator:symbolicator --link sentry-postgres:postgres --link sentry-kafka:kafka --link sentry-snuba-api:snuba-api -e "SENTRY_CONF=/etc/sentry" -e "SNUBA=http://snuba-api:1218" -e "SENTRY_SECRET_KEY='$(key)'" $(APP_ID) $(APP_SECRET) -e "SENTRY_SINGLE_ORGANIZATION=True" -e "SENTRY_RELAY_PUBLIC_KEYS=$(relay_keys)"
 
 .PHONY: build
-build: sentryimage symbolicatorimage snubaimage
+build: sentryimage symbolicatorimage snubaimage relayimage
 
 sentryimage:
 	@docker build --pull -t $(IMAGE_PREFIX)/sentry:latest sentry
@@ -37,6 +37,10 @@ snubaimage:
 	@docker build --pull -t $(IMAGE_PREFIX)/snuba:latest snuba
 	@docker tag $(IMAGE_PREFIX)/snuba:latest $(IMAGE_PREFIX)/snuba:$(IMAGE_TAG)
 
+relayimage:
+	@docker build --pull -t $(IMAGE_PREFIX)/relay:latest relay
+	@docker tag $(IMAGE_PREFIX)/relay:latest $(IMAGE_PREFIX)/relay:$(IMAGE_TAG)
+
 .PHONY: push
 push:
 	@docker --config=$(DOCKER_CONF) push $(IMAGE_PREFIX)/sentry:latest
@@ -46,7 +50,10 @@ push:
 prerequp:
 	docker run -d --name sentry-redis redis
 	docker run -d --name sentry-postgres --env POSTGRES_PASSWORD=secret --env POSTGRES_USER=sentry postgres:9.6
-	docker run -d --name sentry-clickhouse --mount type=bind,source=$(PWD)/test/config/clickhouse.xml,target=/etc/clickhouse-server/config.d/sentry.xml yandex/clickhouse-server:20.3.9.70
+	docker run -d --name sentry-clickhouse --mount type=bind,source=$(PWD)/test/config/clickhouse/clickhouse.xml,target=/etc/clickhouse-server/config.d/sentry.xml yandex/clickhouse-server:20.3.9.70
+	@mkdir -p test/config/relay
+	@cp relay/config.yml test/config/relay
+	docker run -ti --mount type=bind,source=$(PWD)/test/config/relay/config.yml,target=/tmp/config.yml quay.io/app-sre/relay:latest -c /tmp credentials generate --stdout > test/config/relay/credentials.json
 
 .PHONY: localup
 localup: prerequp snubaup sentryup
@@ -54,6 +61,7 @@ localup: prerequp snubaup sentryup
 .PHONY: sentryup
 sentryup:
 	@$(eval key := $(shell docker run --rm -it $(IMAGE_PREFIX)/sentry:latest sentry config generate-secret-key))
+	@$(eval relay_keys := $(shell cat test/config/relay/credentials.json | jq .public_key | tr -d '"'))
 
 	# Symbolicator
 	docker run --link sentry-redis:redis --link sentry-postgres:postgres --link sentry-kafka:kafka -e "SNUBA=http://snuba-api:1218" -e "SENTRY_SECRET_KEY='$(key)'" -d --name sentry-symbolicator ${IMAGE_PREFIX}/symbolicator:latest run -c /etc/symbolicator/config.yml
@@ -64,12 +72,14 @@ sentryup:
 
 	# Sentry
 	docker run -d --name sentry-cron $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run cron
-	docker run -d --name sentry-web-01 $(SENTRY_OPTS) --publish 9000:9000 $(IMAGE_PREFIX)/sentry:latest run web
+	docker run -d --name sentry-web-01 $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run web
 	docker run -d --name sentry-worker-01 $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run worker
 	docker run -d --name sentry-ingest-consumer $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run ingest-consumer --all-consumer-types
 	docker run -d --name sentry-post-process-forwarder $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run post-process-forwarder --commit-batch-size 1
 	docker run -d --name sentry-subscription-consumer-events $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run query-subscription-consumer --commit-batch-size 1 --topic events-subscription-results
 	docker run -d --name sentry-subscription-consumer-transactions $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest run query-subscription-consumer --commit-batch-size 1 --topic transactions-subscription-results
+	docker run -d --name sentry-relay --link sentry-web-01:sentry-web --link sentry-kafka:kafka --link sentry-redis:redis --mount type=bind,source=$(PWD)/test/config/relay,target=/tmp $(IMAGE_PREFIX)/relay:latest run -c /tmp
+	docker run -d --name sentry-nginx --link sentry-web-01:sentry-web --link sentry-relay:relay --mount type=bind,source=$(PWD)/test/config/nginx,target=/etc/nginx --publish 9000:80 nginx:1.16
 	@echo "You can now access sentry on http://localhost:9000 with user $(SENTRY_INITIAL_EMAIL) and password $(SENTRY_INITIAL_PASSWORD)"
 
 .PHONY: kafkaup
@@ -91,8 +101,8 @@ localdown: snubadown sentrydown
 
 .PHONY: sentrydown
 sentrydown:
-	docker stop sentry-cron sentry-web-01 sentry-worker-01 sentry-symbolicator sentry-ingest-consumer sentry-post-process-forwarder sentry-subscription-consumer-events sentry-subscription-consumer-transactions
-	docker rm sentry-cron sentry-web-01 sentry-worker-01 sentry-symbolicator sentry-ingest-consumer sentry-post-process-forwarder sentry-subscription-consumer-events sentry-subscription-consumer-transactions
+	docker stop sentry-cron sentry-web-01 sentry-worker-01 sentry-symbolicator sentry-ingest-consumer sentry-post-process-forwarder sentry-subscription-consumer-events sentry-subscription-consumer-transactions sentry-relay sentry-nginx
+	docker rm sentry-cron sentry-web-01 sentry-worker-01 sentry-symbolicator sentry-ingest-consumer sentry-post-process-forwarder sentry-subscription-consumer-events sentry-subscription-consumer-transactions sentry-relay sentry-nginx
 
 .PHONY: kafkadown
 kafkadown:
