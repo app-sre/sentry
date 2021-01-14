@@ -64,7 +64,7 @@ sentryup:
 	@$(eval relay_keys := $(shell cat test/config/relay/credentials.json | jq .public_key | tr -d '"'))
 
 	# Symbolicator
-	docker run --link sentry-redis:redis --link sentry-postgres:postgres --link sentry-kafka:kafka -e "SNUBA=http://snuba-api:1218" -e "SENTRY_SECRET_KEY='$(key)'" -d --name sentry-symbolicator ${IMAGE_PREFIX}/symbolicator:latest run -c /etc/symbolicator/config.yml
+	docker run -d --name sentry-symbolicator --publish 3021:3021 --link sentry-redis:redis --link sentry-postgres:postgres --link sentry-kafka:kafka -e "SNUBA=http://snuba-api:1218" -e "SENTRY_SECRET_KEY='$(key)'" ${IMAGE_PREFIX}/symbolicator:latest run -c /etc/symbolicator/config.yml
 
 	# DB init
 	docker run --rm -it $(SENTRY_OPTS) $(IMAGE_PREFIX)/sentry:latest upgrade --noinput

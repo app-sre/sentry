@@ -37,6 +37,7 @@ from sentry.utils.types import Bool
 
 import os
 import os.path
+import socket
 
 CONF_ROOT = os.path.dirname(__file__)
 env = os.environ.get
@@ -68,6 +69,10 @@ SENTRY_USE_BIG_INTS = True
 # Instruct Sentry that this install intends to be run by a single organization
 # and thus various UI optimizations should be enabled.
 SENTRY_SINGLE_ORGANIZATION = Bool(env("SENTRY_SINGLE_ORGANIZATION", True))
+
+SENTRY_OPTIONS["system.event-retention-days"] = int(
+    env("SENTRY_EVENT_RETENTION_DAYS", "90")
+)
 
 #########
 # Redis #
@@ -305,7 +310,65 @@ if SENTRY_OPTIONS["mail.enable-replies"]:
 #########################
 
 # Allow Symbolicator's request IP to fetch debug files from Sentry.
-INTERNAL_SYSTEM_IPS = ["127.0.0.1"]
+# Generously adapted from pynetlinux: https://git.io/JJmga
+def get_internal_network():
+    import ctypes
+    import fcntl
+    import math
+    import socket
+    import struct
+
+    iface = b"eth0"
+    sockfd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    ifreq = struct.pack(b"16sH14s", iface, socket.AF_INET, b"\x00" * 14)
+
+    try:
+        ip = struct.unpack(
+            b"!I", struct.unpack(b"16sH2x4s8x", fcntl.ioctl(sockfd, 0x8915, ifreq))[2]
+        )[0]
+        netmask = socket.ntohl(
+            struct.unpack(b"16sH2xI8x", fcntl.ioctl(sockfd, 0x891B, ifreq))[2]
+        )
+    except IOError:
+        return ()
+    base = socket.inet_ntoa(struct.pack(b"!I", ip & netmask))
+    netmask_bits = 32 - int(round(math.log(ctypes.c_uint32(~netmask).value + 1, 2), 1))
+    return "{0:s}/{1:d}".format(base, netmask_bits)
+
+
+INTERNAL_SYSTEM_IPS = (get_internal_network(),)
+
+############
+# Features #
+############
+
+SENTRY_FEATURES["projects:sample-events"] = False
+SENTRY_FEATURES.update(
+    {
+        feature: True
+        for feature in (
+            "organizations:discover",
+            "organizations:events",
+            "organizations:global-views",
+            "organizations:incidents",
+            "organizations:integrations-issue-basic",
+            "organizations:integrations-issue-sync",
+            "organizations:invite-members",
+            "organizations:metric-alert-builder-aggregate",
+            "organizations:sso-basic",
+            "organizations:sso-rippling",
+            "organizations:sso-saml2",
+            "organizations:performance-view",
+            "organizations:advanced-search",
+            "projects:custom-inbound-filters",
+            "projects:data-forwarding",
+            "projects:discard-groups",
+            "projects:plugins",
+            "projects:rate-limits",
+            "projects:servicehooks",
+        )
+    }
+)
 
 # If this value ever becomes compromised, it's important to regenerate your
 # SENTRY_SECRET_KEY. Changing this value will result in all current sessions
