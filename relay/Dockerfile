@@ -60,6 +60,5 @@ EXPOSE 3000
 
 COPY --from=builder /bin/relay /bin/relay
 COPY ./docker-entrypoint.sh /docker-entrypoint.sh
-COPY ./config.yml /etc/relay
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
