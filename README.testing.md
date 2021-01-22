@@ -37,8 +37,22 @@ export RELAY_CREDS=`docker run -ti --mount type=bind,source=$(PWD)/test/config/r
 
 ```shell
 export SENTRY_KEY=`docker run --rm -it quay.io/app-sre/sentry:latest sentry config generate-secret-key`
+```
 
 1. Deploy the prereqs
+
 ```shell
 oc process --local -f test/deploy/sentry-deps.yaml -p RELAY_CREDENTIALS=$RELAY_CREDS -p SENTRY_SECRET_KEY="$SENTRY_KEY" | oc create -f -
+```
+
+1. Deploy clickhouse
+
+```shell
+oc process --local -f clickhouse.yaml | oc create -f -
+```
+
+1. Initialize the prereqs
+
+```shell
+oc process --local -f sentry-init.yaml -p IMAGE=quay.io/rrati/sentry -p IMAGE_TAG=test -p SNUBA_IMAGE=quay.io/rrati/snuba -p SNUBA_IMAGE_TAG=test | oc create -f -
 ```
