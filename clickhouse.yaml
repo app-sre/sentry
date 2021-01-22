@@ -57,7 +57,7 @@ objects:
           - name: clickhouse-config
             mountPath: /etc/clickhouse-server/config.d
           - name: clickhouse-data
-            mountPath: /var/lib/clickhouse
+            mountPath: /clickhouse
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
         volumes:
@@ -99,6 +99,10 @@ objects:
   data:
     sentry.xml: |
       <yandex>
+          <path>/clickhouse/data/</path>
+          <user_files_path>/clickhouse/data/user_files/</user_files_path>
+          <access_control_path>/clickhouse/data/access/</access_control_path>
+          <tmp_path>/tmp</tmp_path>
           <listen_host>0.0.0.0</listen_host>
           <listen_try>1</listen_try>
           <logger>
