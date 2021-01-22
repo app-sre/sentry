@@ -106,7 +106,9 @@ objects:
           <listen_host>0.0.0.0</listen_host>
           <listen_try>1</listen_try>
           <logger>
-              <level>information</level>
+              <level>debug</level>
+              <log>/dev/null</log>
+              <errorlog>/dev/null</errorlog>
               <console>1</console>
           </logger>
           <merge_tree>
