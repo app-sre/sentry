@@ -240,10 +240,10 @@ objects:
           resources:
             limits:
               cpu: 1000m
-              memory: 2048Mi
+              memory: 1024Mi
             requests:
-              cpu: 1000m
-              memory: 2048Mi
+              cpu: 100m
+              memory: 512Mi
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
         dnsPolicy: ClusterFirst
