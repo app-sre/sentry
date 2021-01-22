@@ -64,6 +64,9 @@ objects:
         - name: clickhouse-config
           configMap:
             name: ${CLICKHOUSE_CONFIG_CONFIGMAP}
+        - name: clickhouse-data
+          persistentVolumeClaim:
+            claimName: clickhouse-data
         dnsPolicy: ClusterFirst
         restartPolicy: Always
         schedulerName: default-scheduler

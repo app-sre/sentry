@@ -30,7 +30,7 @@ clickhouse-debug:
 
 
 clickhouse-update:
-	 oc process -f clickhouse.yaml -p CLICKHOUSE_IMAGE=quay.io/mmclane/clickhouse-server -p CLICKHOUSE_IMAGE_TAG=latest | oc -n $(SENTRY_NS) patch -f -
+	 oc process -f clickhouse.yaml -p CLICKHOUSE_IMAGE=quay.io/mmclane/clickhouse-server -p CLICKHOUSE_IMAGE_TAG=latest | oc -n $(SENTRY_NS) apply -f -
 
 clickhouse-clean:
 	oc -n $(SENTRY_NS) delete deployment/clickhouse --wait=true
