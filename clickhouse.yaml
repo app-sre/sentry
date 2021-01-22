@@ -102,6 +102,7 @@ objects:
           <path>/clickhouse/data/</path>
           <user_files_path>/clickhouse/data/user_files/</user_files_path>
           <access_control_path>/clickhouse/data/access/</access_control_path>
+          <format_schema_path>/clickhouse/data/format_schemas/</format_schema_path>
           <tmp_path>/tmp</tmp_path>
           <listen_host>0.0.0.0</listen_host>
           <listen_try>1</listen_try>
