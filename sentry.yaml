@@ -1425,7 +1425,7 @@ objects:
           - name: SNUBA_SETTINGS
             value: docker
           - name: CLICKHOUSE_HOST
-            value: ${CLICKHOUSE_SERVICE} 
+            value: ${CLICKHOUSE_SERVICE}
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
           - name: CLICKHOUSE_HTTP_PORT
@@ -1517,7 +1517,7 @@ objects:
           - name: SNUBA_SETTINGS
             value: docker
           - name: CLICKHOUSE_HOST
-            value: ${CLICKHOUSE_HTTP_SERVICE} 
+            value: ${CLICKHOUSE_HTTP_SERVICE}
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
           - name: CLICKHOUSE_HTTP_PORT
@@ -1593,7 +1593,7 @@ objects:
           - name: SNUBA_SETTINGS
             value: docker
           - name: CLICKHOUSE_HOST
-            value: ${CLICKHOUSE_HTTP_SERVICE} 
+            value: ${CLICKHOUSE_HTTP_SERVICE}
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
           - name: CLICKHOUSE_HTTP_PORT
@@ -1669,7 +1669,7 @@ objects:
           - name: SNUBA_SETTINGS
             value: docker
           - name: CLICKHOUSE_HOST
-            value: ${CLICKHOUSE_SERVICE} 
+            value: ${CLICKHOUSE_SERVICE}
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
           - name: CLICKHOUSE_HTTP_PORT
@@ -1747,7 +1747,7 @@ objects:
           - name: SNUBA_SETTINGS
             value: docker
           - name: CLICKHOUSE_HOST
-            value: ${CLICKHOUSE_HTTP_SERVICE} 
+            value: ${CLICKHOUSE_HTTP_SERVICE}
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
           - name: CLICKHOUSE_HTTP_PORT
@@ -1823,7 +1823,7 @@ objects:
           - name: SNUBA_SETTINGS
             value: docker
           - name: CLICKHOUSE_HOST
-            value: ${CLICKHOUSE_SERVICE} 
+            value: ${CLICKHOUSE_SERVICE}
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
           - name: CLICKHOUSE_HTTP_PORT
@@ -1905,7 +1905,7 @@ objects:
           - name: SNUBA_SETTINGS
             value: docker
           - name: CLICKHOUSE_HOST
-            value: ${CLICKHOUSE_SERVICE} 
+            value: ${CLICKHOUSE_SERVICE}
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
           - name: CLICKHOUSE_HTTP_PORT
@@ -1987,7 +1987,7 @@ objects:
           - name: SNUBA_SETTINGS
             value: docker
           - name: CLICKHOUSE_HOST
-            value: ${CLICKHOUSE_SERVICE} 
+            value: ${CLICKHOUSE_SERVICE}
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
           - name: CLICKHOUSE_HTTP_PORT
