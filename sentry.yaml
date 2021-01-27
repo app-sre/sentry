@@ -41,7 +41,7 @@ objects:
           - name: KAFKA_BOOTSTRAP
             value: ${KAFKA_BOOTSTRAP}
           - name: SENTRY_RELAY_PUBLIC_KEYS
-            value: ${RELAY_PUBLIC_KEY}
+            value: "${RELAY_PUBLIC_KEY},${RELAY_PUBLIC_KEY_B}"
           - name: SENTRY_POSTGRES_HOST
             valueFrom:
               secretKeyRef:
@@ -165,7 +165,7 @@ objects:
           - web
           env:
           - name: SENTRY_RELAY_PUBLIC_KEYS
-            value: ${RELAY_PUBLIC_KEY}
+            value: "${RELAY_PUBLIC_KEY},${RELAY_PUBLIC_KEY_B}"
           - name: SENTRY_POSTGRES_HOST
             valueFrom:
               secretKeyRef:
@@ -294,7 +294,7 @@ objects:
           - name: KAFKA_BOOTSTRAP
             value: ${KAFKA_BOOTSTRAP}
           - name: SENTRY_RELAY_PUBLIC_KEYS
-            value: ${RELAY_PUBLIC_KEY}
+            value: "${RELAY_PUBLIC_KEY},${RELAY_PUBLIC_KEY_B}"
           - name: SENTRY_POSTGRES_HOST
             valueFrom:
               secretKeyRef:
@@ -425,7 +425,7 @@ objects:
           - name: SENTRY_KAFKA_HOSTS
             value: ${KAFKA_BOOTSTRAP}
           - name: SENTRY_RELAY_PUBLIC_KEYS
-            value: ${RELAY_PUBLIC_KEY}
+            value: "${RELAY_PUBLIC_KEY},${RELAY_PUBLIC_KEY_B}"
           - name: SENTRY_POSTGRES_HOST
             valueFrom:
               secretKeyRef:
@@ -552,7 +552,7 @@ objects:
           - name: KAFKA_BOOTSTRAP
             value: ${KAFKA_BOOTSTRAP}
           - name: SENTRY_RELAY_PUBLIC_KEYS
-            value: ${RELAY_PUBLIC_KEY}
+            value: "${RELAY_PUBLIC_KEY},${RELAY_PUBLIC_KEY_B}"
           - name: SENTRY_POSTGRES_HOST
             valueFrom:
               secretKeyRef:
@@ -680,7 +680,7 @@ objects:
           - name: KAFKA_BOOTSTRAP
             value: ${KAFKA_BOOTSTRAP}
           - name: SENTRY_RELAY_PUBLIC_KEYS
-            value: ${RELAY_PUBLIC_KEY}
+            value: "${RELAY_PUBLIC_KEY},${RELAY_PUBLIC_KEY_B}"
           - name: SENTRY_POSTGRES_HOST
             valueFrom:
               secretKeyRef:
@@ -808,7 +808,7 @@ objects:
           - name: KAFKA_BOOTSTRAP
             value: ${KAFKA_BOOTSTRAP}
           - name: SENTRY_RELAY_PUBLIC_KEYS
-            value: ${RELAY_PUBLIC_KEY}
+            value: "${RELAY_PUBLIC_KEY},${RELAY_PUBLIC_KEY_B}"
           - name: SENTRY_POSTGRES_HOST
             valueFrom:
               secretKeyRef:
@@ -2234,8 +2234,12 @@ parameters:
 - name: RELAY_SECRET_KEY
   displayName: Sentry Relay Secret Key
   generate: expression
-  from: "[a-zA-Z0-9]{42}"
+  from: "[a-zA-Z0-9]{43}"
 - name: RELAY_PUBLIC_KEY
   displayName: Sentry Relay Public Key
   generate: expression
-  from: "[a-zA-Z0-9]{42}"
+  from: "[a-zA-Z0-9]{43}"
+- name: RELAY_PUBLIC_KEY_B
+  displayName: Sentry Relay Public Key Backup
+  generate: expression
+  from: "[a-zA-Z0-9]{43}"
