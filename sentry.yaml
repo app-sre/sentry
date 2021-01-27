@@ -1428,6 +1428,8 @@ objects:
             value: ${CLICKHOUSE_SERVICE} 
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
+          - name: CLICKHOUSE_HTTP_PORT
+            value: ${CLICKHOUSE_HTTP_SERVICE_PORT}
           - name: DEFAULT_BROKERS
             valueFrom:
               secretKeyRef:
@@ -1670,6 +1672,8 @@ objects:
             value: ${CLICKHOUSE_SERVICE} 
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
+          - name: CLICKHOUSE_HTTP_PORT
+            value: ${CLICKHOUSE_HTTP_SERVICE_PORT}
           - name: DEFAULT_BROKERS
             valueFrom:
               secretKeyRef:
@@ -1822,6 +1826,8 @@ objects:
             value: ${CLICKHOUSE_SERVICE} 
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
+          - name: CLICKHOUSE_HTTP_PORT
+            value: ${CLICKHOUSE_HTTP_SERVICE_PORT}
           - name: DEFAULT_BROKERS
             valueFrom:
               secretKeyRef:
@@ -1902,6 +1908,8 @@ objects:
             value: ${CLICKHOUSE_SERVICE} 
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
+          - name: CLICKHOUSE_HTTP_PORT
+            value: ${CLICKHOUSE_HTTP_SERVICE_PORT}
           - name: DEFAULT_BROKERS
             valueFrom:
               secretKeyRef:
@@ -1982,6 +1990,8 @@ objects:
             value: ${CLICKHOUSE_SERVICE} 
           - name: CLICKHOUSE_PORT
             value: ${CLICKHOUSE_SERVICE_PORT}
+          - name: CLICKHOUSE_HTTP_PORT
+            value: ${CLICKHOUSE_HTTP_SERVICE_PORT}
           - name: DEFAULT_BROKERS
             valueFrom:
               secretKeyRef:
@@ -2220,7 +2230,7 @@ parameters:
   displayName: Secret Relay ID
   description: This is the unique client ID for the relay to help identify the source
   generate: expression
-  from: "[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}"
+  from: "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
 - name: RELAY_SECRET_KEY
   displayName: Sentry Relay Secret Key
   generate: expression
