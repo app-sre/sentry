@@ -384,9 +384,9 @@ if not secret_key:
     )
 
 if "GITHUB_APP_ID" in os.environ:
-    GITHUB_EXTENDED_PERMISSIONS = ["repo"]
-    GITHUB_APP_ID = env("GITHUB_APP_ID")
-    GITHUB_API_SECRET = env("GITHUB_API_SECRET")
+    SENTRY_OPTIONS['github-login.client-id'] = env("GITHUB_APP_ID")
+    SENTRY_OPTIONS['github-login.client-secret'] = env("GITHUB_API_SECRET")
+    SENTRY_OPTIONS['github-login.extended-permissions'] = ["repo"]
 
 if "SENTRY_RUNNING_UWSGI" not in os.environ and len(secret_key) < 32:
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
